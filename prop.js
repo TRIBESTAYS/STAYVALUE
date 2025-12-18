@@ -74,7 +74,7 @@ function calculateFinancials() {
     const pricePerBed = parseFloat(pricePerBedInput.value);
     const occupancy = parseFloat(occupancySelect.value);
     const bedOpex = parseFloat(bedOpexInput.value);
-    const annualSalaries = parseFloat(annualSalariesInput.value);
+    const monthlySalaries = parseFloat(annualSalariesInput.value);
     const marketingRate = 0.05;
     const operatorRevenueCut = 0.05;
     const operatorProfitShare = 0.15;
@@ -97,7 +97,6 @@ function calculateFinancials() {
     // Expense calculations
     const roomOpex = bedOpex * bedsPerRoom;
     const totalOpex = occupiedRooms * roomOpex;
-    const monthlySalaries = annualSalaries / 12;
     const marketing = contribution * marketingRate;
     
     // EBITDA calculation
@@ -153,7 +152,7 @@ function resetForm() {
     pricePerBedInput.value = 0;
     occupancySelect.value = 0;
     bedOpexInput.value = 8000;
-    annualSalariesInput.value = 300000;
+    annualSalariesInput.value = 25000;
     
     // Reset results display
     totalBedsEl.textContent = '0';
