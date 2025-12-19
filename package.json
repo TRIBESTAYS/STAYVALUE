@@ -1,7 +1,7 @@
 {
-  "name": "tribe-calculator",
+  "name": "tribecalc",
   "version": "1.0.0",
-  "description": "Tribe Calculator Application",
+  "description": "TribeCalc Application",
   "scripts": {
     "start": "serve"
   },
