@@ -15,7 +15,6 @@ const monthlyResults = document.getElementById('monthlyResults');
 const yearlyResults = document.getElementById('yearlyResults');
 
 // Results Display Elements
-const totalBedsEl = document.getElementById('totalBeds');
 const occupiedBedsEl = document.getElementById('occupiedBeds');
 const monthlyRevenueEl = document.getElementById('monthlyRevenue');
 const contributionEl = document.getElementById('contribution');
@@ -103,7 +102,6 @@ function calculateFinancials() {
     console.log('Basic calculations:', {totalBeds, occupiedBeds, occupiedRooms});
     
     // Display basic metrics
-    totalBedsEl.textContent = totalBeds.toFixed(0);
     occupiedBedsEl.textContent = occupiedBeds.toFixed(0);
     
     // Revenue calculations
@@ -192,15 +190,14 @@ function calculateFinancials() {
 
 // Reset form to default values
 function resetForm() {
-    totalRoomsInput.value = 0;
-    totalBedsInput.value = 0;
-    pricePerBedInput.value = 0;
-    occupancySelect.value = 0;
-    bedOpexInput.value = 8000;
-    annualSalariesInput.value = 300000;
+    totalRoomsInput.value = '';
+    totalBedsInput.value = '';
+    pricePerBedInput.value = '';
+    occupancySelect.value = '';
+    bedOpexInput.value = '';
+    annualSalariesInput.value = '';
     
     // Reset results display
-    totalBedsEl.textContent = '0';
     occupiedBedsEl.textContent = '0';
     monthlyRevenueEl.textContent = '₹0';
     contributionEl.textContent = '₹0';
@@ -263,18 +260,18 @@ calculateBtn.addEventListener('click', calculateFinancials);
 
 resetBtn.addEventListener('click', resetForm);
 
-// Initialize form with default values and calculate on page load
+// Initialize form with empty values
 document.addEventListener('DOMContentLoaded', function() {
-    // Set default values
-    totalRoomsInput.value = 10;
-    totalBedsInput.value = 20; // 2 beds per room by default
-    pricePerBedInput.value = 12000;
-    occupancySelect.value = 0.9; // 90% occupancy by default
-    bedOpexInput.value = 8000;
-    annualSalariesInput.value = 300000;
+    // Clear all input fields
+    totalRoomsInput.value = '';
+    totalBedsInput.value = '';
+    pricePerBedInput.value = '';
+    occupancySelect.value = '';
+    bedOpexInput.value = '';
+    annualSalariesInput.value = '';
     
-    // Trigger calculation
-    calculateFinancials();
+    // Reset all displayed values to 0 or empty
+    resetForm();
 });
 
 // View selector
@@ -290,7 +287,7 @@ allInputs.forEach(input => {
     input.addEventListener('change', validateInputs);
 });
 
-// Initialize with default calculation on page load
+// Initialize UI on page load
 window.addEventListener('DOMContentLoaded', () => {
     // Set initial view
     toggleView();
@@ -299,6 +296,6 @@ window.addEventListener('DOMContentLoaded', () => {
     ownerSplitVisual.style.width = '85%';
     operatorSplitVisual.style.width = '15%';
     
-    // Perform initial calculation with default values
-    calculateFinancials();
+    // Don't perform calculation on page load
+    // User needs to click calculate after entering values
 });
