@@ -237,10 +237,353 @@ function resetForm() {
         input.style.borderColor = '#d1d5db';
     });
     
-    // Hide new sections
-    document.getElementById('executiveSummary').style.display = 'none';
-    document.getElementById('scenarioComparison').style.display = 'none';
     document.getElementById('riskSignals').style.display = 'none';
+}
+
+// Generate PDF report
+async function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Set up document
+    doc.setFont('helvetica');
+    let yPosition = 20;
+    const lineHeight = 7;
+    const sectionSpacing = 12;
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 20;
+    const maxWidth = pageWidth - 2 * margin;
+    
+    // Colors
+    const primaryColor = [30, 58, 138]; // #1e3a8a
+    const secondaryColor = [59, 130, 246]; // #3b82f6
+    const successColor = [16, 185, 129]; // #10b981
+    const dangerColor = [239, 68, 68]; // #ef4444
+    const grayColor = [107, 114, 128]; // #6b7280
+    
+    // Header with branding
+    doc.setFillColor(...primaryColor);
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TRIBECALC', margin, 25);
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Property Investment Analysis Report', margin, 32);
+    
+    // Report date
+    doc.setFontSize(8);
+    doc.setTextColor(...grayColor);
+    doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    })}`, pageWidth - margin - 60, 35);
+    
+    yPosition = 55;
+    
+    // Executive Summary Box
+    doc.setFillColor(248, 250, 252);
+    doc.rect(margin - 5, yPosition - 8, maxWidth + 10, 25, 'F');
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.rect(margin - 5, yPosition - 8, maxWidth + 10, 25);
+    
+    doc.setTextColor(...primaryColor);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('EXECUTIVE SUMMARY', margin, yPosition);
+    
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    const summaryText = document.getElementById('summaryText').textContent;
+    const summaryLines = doc.splitTextToSize(summaryText, maxWidth - 10);
+    doc.text(summaryLines, margin, yPosition + 8);
+    
+    yPosition += 35;
+    
+    // Property Overview Section
+    doc.setTextColor(...primaryColor);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PROPERTY OVERVIEW', margin, yPosition);
+    yPosition += sectionSpacing;
+    
+    // Property details in a table format
+    const beds = parseFloat(totalBedsInput.value) || 0;
+    const rooms = parseFloat(totalRoomsInput.value) || 0;
+    const pricePerBed = parseFloat(pricePerBedInput.value) || 0;
+    const occupancyPercent = (parseFloat(occupancySelect.value) * 100).toFixed(0) + '%';
+    const bedOpex = parseFloat(bedOpexInput.value) || 0;
+    const salaries = parseFloat(annualSalariesInput.value) || 0;
+    
+    // Property specs table
+    const specsData = [
+        ['Total Beds', beds.toString(), 'Total Rooms', rooms.toString()],
+        ['Price per Bed', `₹${pricePerBed.toLocaleString('en-IN')}`, 'Occupancy Rate', occupancyPercent],
+        ['Bed Opex', `₹${bedOpex.toLocaleString('en-IN')}`, 'Monthly Salaries', `₹${salaries.toLocaleString('en-IN')}`]
+    ];
+    
+    doc.autoTable({
+        startY: yPosition,
+        margin: { left: margin },
+        head: [],
+        body: specsData,
+        theme: 'grid',
+        styles: {
+            fontSize: 10,
+            cellPadding: 4,
+        },
+        columnStyles: {
+            0: { fillColor: [248, 250, 252], textColor: primaryColor, fontStyle: 'bold' },
+            2: { fillColor: [248, 250, 252], textColor: primaryColor, fontStyle: 'bold' }
+        },
+        alternateRowStyles: { fillColor: [255, 255, 255] }
+    });
+    
+    yPosition = doc.lastAutoTable.finalY + sectionSpacing;
+    
+    // Financial Analysis Section
+    doc.setTextColor(...primaryColor);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('FINANCIAL ANALYSIS', margin, yPosition);
+    yPosition += sectionSpacing;
+    
+    const isYearlyView = viewSelect.value === 'yearly';
+    const period = isYearlyView ? 'Yearly' : 'Monthly';
+    
+    const revenue = isYearlyView ? yearlyRevenueEl.textContent : monthlyRevenueEl.textContent;
+    const contribution = isYearlyView ? yearlyContributionEl.textContent : contributionEl.textContent;
+    const opex = isYearlyView ? yearlyOpexEl.textContent : totalOpexEl.textContent;
+    const marketing = isYearlyView ? yearlyMarketingEl.textContent : marketingSpendEl.textContent;
+    const ebitda = isYearlyView ? yearlyEbitdaEl.textContent : ebitdaEl.textContent;
+    const ownerEarnings = isYearlyView ? yearlyOwnerEarningsEl.textContent : ownerEarningsEl.textContent;
+    const operatorEarnings = isYearlyView ? yearlyOperatorEarningsEl.textContent : operatorEarningsEl.textContent;
+    
+    // Financial metrics table
+    const financialData = [
+        ['Revenue', revenue],
+        ['Operator Revenue Cut (5%)', contribution.replace('Contribution', 'Net Revenue')],
+        ['Operating Expenses', opex],
+        ['Marketing Spend', marketing],
+        ['EBITDA', ebitda],
+        ['Owner Earnings (85%)', ownerEarnings],
+        ['Operator Earnings (15%)', operatorEarnings]
+    ];
+    
+    doc.autoTable({
+        startY: yPosition,
+        margin: { left: margin },
+        head: [[`${period} Financial Metrics`, 'Amount']],
+        body: financialData,
+        theme: 'striped',
+        headStyles: {
+            fillColor: primaryColor,
+            textColor: [255, 255, 255],
+            fontStyle: 'bold'
+        },
+        styles: {
+            fontSize: 10,
+            cellPadding: 5,
+        },
+        columnStyles: {
+            0: { fontStyle: 'bold' },
+            1: { halign: 'right', fontStyle: 'bold' }
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] }
+    });
+    
+    yPosition = doc.lastAutoTable.finalY + sectionSpacing;
+    
+    // Scenario Analysis Section
+    if (document.getElementById('scenarioComparison').style.display !== 'none') {
+        doc.setTextColor(...primaryColor);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('SCENARIO ANALYSIS', margin, yPosition);
+        yPosition += sectionSpacing;
+        
+        // Scenario table
+        const scenarioData = [];
+        const tableRows = document.querySelectorAll('#scenarioTableBody tr');
+        tableRows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 4) {
+                const occupancy = cells[0].textContent;
+                const revenue = cells[1].textContent;
+                const ebitda = cells[2].textContent;
+                const status = cells[3].textContent;
+                
+                // Color code based on status
+                let statusColor = grayColor;
+                if (status.includes('Excellent') || status.includes('Strong')) statusColor = successColor;
+                else if (status.includes('Loss')) statusColor = dangerColor;
+                
+                scenarioData.push([
+                    occupancy,
+                    revenue,
+                    ebitda,
+                    { content: status, styles: { textColor: statusColor, fontStyle: 'bold' } }
+                ]);
+            }
+        });
+        
+        doc.autoTable({
+            startY: yPosition,
+            margin: { left: margin },
+            head: [['Occupancy', `${period} Revenue`, `${period} EBITDA`, 'Status']],
+            body: scenarioData,
+            theme: 'grid',
+            headStyles: {
+                fillColor: primaryColor,
+                textColor: [255, 255, 255],
+                fontStyle: 'bold'
+            },
+            styles: {
+                fontSize: 9,
+                cellPadding: 4,
+            },
+            columnStyles: {
+                0: { halign: 'center', fontStyle: 'bold' },
+                1: { halign: 'right' },
+                2: { halign: 'right' },
+                3: { halign: 'center' }
+            }
+        });
+        
+        yPosition = doc.lastAutoTable.finalY + sectionSpacing;
+    }
+    
+    // Risk Assessment Section
+    if (document.getElementById('riskSignals').style.display !== 'none') {
+        doc.setTextColor(...primaryColor);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('RISK ASSESSMENT', margin, yPosition);
+        yPosition += sectionSpacing;
+        
+        // Risk badge
+        const ebitdaValue = parseFloat(ebitda.replace('₹', '').replace(/,/g, ''));
+        let riskLevel = 'Unknown';
+        let riskColor = grayColor;
+        
+        if (ebitdaValue < 0) {
+            riskLevel = '🔴 LOSS-MAKING';
+            riskColor = dangerColor;
+        } else if (ebitdaValue > 0) {
+            riskLevel = '🟢 HEALTHY';
+            riskColor = successColor;
+        }
+        
+        doc.setFillColor(...riskColor);
+        doc.rect(margin, yPosition - 5, 40, 8, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text(riskLevel, margin + 2, yPosition);
+        
+        yPosition += 15;
+        
+        // Risk factors
+        const riskDrivers = document.querySelectorAll('.risk-chip');
+        if (riskDrivers.length > 0) {
+            doc.setTextColor(...primaryColor);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Identified Risk Factors:', margin, yPosition);
+            yPosition += 8;
+            
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            riskDrivers.forEach(chip => {
+                doc.setTextColor(...dangerColor);
+                doc.text('⚠️', margin, yPosition);
+                doc.setTextColor(0, 0, 0);
+                doc.text(chip.textContent, margin + 8, yPosition);
+                yPosition += lineHeight;
+            });
+        }
+        
+        yPosition += sectionSpacing;
+    }
+    
+    // Recommendations Section
+    doc.setTextColor(...primaryColor);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('RECOMMENDATIONS', margin, yPosition);
+    yPosition += sectionSpacing;
+    
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    
+    const recommendations = [];
+    
+    const ebitdaValue = parseFloat(ebitda.replace('₹', '').replace(/,/g, ''));
+    if (ebitdaValue < 0) {
+        recommendations.push('• Consider increasing occupancy rates or adjusting pricing strategy');
+        recommendations.push('• Review operating expenses for cost optimization opportunities');
+        recommendations.push('• Evaluate market conditions and competitive positioning');
+    } else if (ebitdaValue > 0) {
+        recommendations.push('• Current operations show positive financial performance');
+        recommendations.push('• Monitor occupancy rates to maintain profitability');
+        recommendations.push('• Consider expansion opportunities if market conditions are favorable');
+    }
+    
+    recommendations.forEach(rec => {
+        doc.text(rec, margin, yPosition);
+        yPosition += lineHeight;
+    });
+    
+    // Footer
+    const footerY = doc.internal.pageSize.height - 20;
+    doc.setDrawColor(...primaryColor);
+    doc.setLineWidth(0.5);
+    doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+    
+    doc.setTextColor(...grayColor);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'italic');
+    doc.text('Generated by TRIBECALC - Property Price Predictor | StayValue', margin, footerY);
+    
+    doc.setTextColor(...primaryColor);
+    doc.setFont('helvetica', 'bold');
+    doc.text('www.tribecalc.com', pageWidth - margin - 35, footerY);
+    
+    // Save the PDF
+    const fileName = `TRIBECALC_${beds}bed_${occupancyPercent}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    
+    showNotification('Professional PDF report downloaded!', 'success');
+}
+
+// Show notification
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Show notification
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Hide and remove after 3 seconds
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 3000);
 }
 
 // Run scenario with different occupancy
@@ -474,6 +817,9 @@ function toggleView() {
 calculateBtn.addEventListener('click', calculateFinancials);
 
 resetBtn.addEventListener('click', resetForm);
+
+// PDF button
+document.getElementById('pdfBtn').addEventListener('click', generatePDF);
 
 // Initialize form with empty values
 document.addEventListener('DOMContentLoaded', function() {
